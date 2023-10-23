@@ -30,7 +30,8 @@ PREDICTIONS_FILE <- file.path(PREDICTIONS_DIR, 'predictions.csv')
 LABEL_ENCODER_FILE <- file.path(MODEL_ARTIFACTS_PATH, 'label_encoder.rds')
 ENCODED_TARGET_FILE <- file.path(MODEL_ARTIFACTS_PATH, "encoded_target.rds")
 TOP_3_CATEGORIES_MAP <- file.path(MODEL_ARTIFACTS_PATH, "top_3_map.rds")
-
+SCALING_FILE <- file.path(MODEL_ARTIFACTS_PATH, "scaler.rds")
+COLNAME_MAPPING <- file.path(MODEL_ARTIFACTS_PATH, "colname_mapping.csv")
 
 # Reading test data.
 file_name <- list.files(TEST_DIR, pattern = "*.csv", full.names = TRUE)[1]
@@ -95,11 +96,33 @@ if (length(categorical_features) > 0 && file.exists(OHE_ENCODER_FILE)) {
   df.test <- test_df_encoded[, !names(test_df_encoded) %in% extra_cols]
 }
 
+# Standard Scaling
+scaling_values <- readRDS(SCALING_FILE) # Assuming you've saved scaling values during training
+for (feature in numeric_features) {
+  df.test[[feature]] <- (df.test[[feature]] - scaling_values[[feature]]$mean) / scaling_values[[feature]]$std
+}
+
+
+# Outlier Capping for Standard Scaled Data
+lower_bound <- -4
+upper_bound <- 4
+
+for (feature in numeric_features) {
+  df.test[[feature]] <- ifelse(df.test[[feature]] < lower_bound, lower_bound, df.test[[feature]])
+  df.test[[feature]] <- ifelse(df.test[[feature]] > upper_bound, upper_bound, df.test[[feature]])
+}
+
+# Load the column name mapping
+colname_mapping <- read.csv(COLNAME_MAPPING)
+# Update the column names based on the mapping
+df.test <- df.test[, colname_mapping$original]
+colnames(df.test) <- colname_mapping$sanitized[match(colnames(df.test), colname_mapping$original)]
+
 type <- ifelse(model_category == "binary_classification", "response", "probs")
 
 # Making predictions
 model <- readRDS(PREDICTOR_FILE_PATH)
-predictions <- predict(model, df.test) 
+predictions <- predict(model, df.test,method='class') 
 
 
 # Getting the original labels

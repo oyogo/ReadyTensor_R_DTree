@@ -21,17 +21,11 @@ RUN R -e "install.packages('caret', dependencies=T)"
 RUN R -e "install.packages('nnet', dependencies=T)"
 RUN R -e "install.packages('rpart', dependencies=T)"
 
-#RUN mkdir -p ~/modellingLogistic
-#WORKDIR /modellingLogistic/
 
-#COPY train /modellingLogistic/train
-#COPY preprocessor.R /modellingLogistic/preprocessor.R
-#COPY testing.R /modellingLogistic/testing.R
-#COPY test /modellingLogistic/test
-COPY ./ModellingLogistic /opt/ModellingLogistic
-WORKDIR /opt/ModellingLogistic
+COPY ./src /opt/src
+WORKDIR /opt/src
 
-ENV PATH="/opt/ModellingLogistic:${PATH}"
+ENV PATH="/opt/src:${PATH}"
 
 RUN chmod +x train &&\
     chmod +x predict &&\

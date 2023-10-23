@@ -10,7 +10,7 @@ So basically, the user just needs to attach the folder with the data with a bina
    * docker-compose.yaml   
    * Dockerfile     
    * model_inputs_outputs     
-   * ModellingLogistic    
+   * src    
  
  ```
 *docker-compose.yaml*: 
@@ -63,7 +63,7 @@ In brief, this is where;
 */model/artifacts/*
 The train script saves variables in .rds format into this folder. This includes the target levels, encoded version of it, imputation values and the predictor file inside the predictor folder.    
 
-*ModellingLogistic*:   
+*src*:   
  This where the executable scripts sit.    
    - train    
    - predict     
@@ -87,10 +87,10 @@ services:
   logmodel:
     build: .
     volumes:
-      - /path/to/data/dir/ml_vol:/modellingLogistic/ml_vol
+      - /path/to/data/dir/ml_vol:/src/ml_vol
     ports:
       - 8080:8080
-    working_dir: /modellingLogistic
+    working_dir: /src
     command: tail -f /dev/null # keep the container running
 
 ```
